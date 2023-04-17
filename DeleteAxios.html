@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+        integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="my_form" onsubmit=setInToLocalStorage(event)>
+        <label for="">Name:</label>
+        <input type="text" name="userName">
+        <label for="">Email:</label>
+        <input type="text" name="emailId">
+        <label for="">PhoneNumber:</label>
+        <input type="text" name="phoneNumber">
+        <input type="submit" value="Submit">
+    </form>
+    <ul id="usersList"></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
+
+    <script>
+
+        let userList = document.getElementById('usersList');
+
+        axios.get('https://crudcrud.com/api/2ff3eaea3d8846cfa7a0ec105ad9cb77/AppoitmentData')
+            .then(res => {
+                const users = res.data;
+                for (let user of users) {
+                    let li = document.createElement('li');
+                    li.appendChild(document.createTextNode(user.name + ': ' + user.email + ', Phone No: ' + user.phone));
+
+                    var delButton = document.createElement('input');
+                    delButton.type = 'button';
+                    delButton.value = 'delete';
+                    delButton.classList = 'btn m-1  p-1 px-2 btn-outline-danger  delete';
+                    var edt_Button = document.createElement('input');
+                    edt_Button.type = 'button';
+                    edt_Button.value = 'Edit';
+                    edt_Button.classList = 'btn m-1  p-1 px-2 btn-outline-info  edit';
+
+                    li.append(edt_Button);
+                    li.append(delButton);
+
+                    userList.appendChild(li);
+                }
+            })
+            // .catch(err => console.log(err));
+            // .catch(err => document.body.innerHTML = `<h1> ${err} </h1>`);
+            .catch(err => userList.append(document.createTextNode(err)));
+
+
+        function setInToLocalStorage(event) {
+            event.preventDefault();
+            var userName = event.target.userName.value;
+            var email = event.target.emailId.value;
+            var phoneNumber = event.target.phoneNumber.value;
+
+            let obj = {
+                name: userName,
+                email: email,
+                phone: phoneNumber
+            }
+
+            axios.post('https://crudcrud.com/api/2ff3eaea3d8846cfa7a0ec105ad9cb77/AppoitmentData', obj)
+                .then(response => console.log(response.data))
+                .catch(err => console.log(err));
+            // localStorage.setItem(email, JSON.stringify(obj));
+
+
+
+            // let userList = document.getElementById('usersList');
+            let li = document.createElement('li');
+            li.appendChild(document.createTextNode(userName + ': ' + email + ', Phone No: ' + phoneNumber));
+
+            var delButton = document.createElement('input');
+            delButton.type = 'button';
+            delButton.value = 'delete';
+            // delButton.className = 'delete';
+            delButton.classList = 'btn m-1  p-1 px-2 btn-outline-danger  delete';
+            var edt_Button = document.createElement('input');
+            edt_Button.type = 'button';
+            edt_Button.value = 'Edit';
+            // edt_Button.className = 'edit';
+            edt_Button.classList = 'btn m-1  p-1 px-2 btn-outline-info  edit';
+
+
+            li.append(edt_Button);
+            li.append(delButton);
+
+            userList.appendChild(li);
+        }
+
+
+
+        userList.addEventListener('click', removeItem);
+        function removeItem(event) {
+            if (event.target.classList.contains('delete')) {
+                var li = event.target.parentElement;
+                var email = li.textContent.split(":")[1].split(',')[0].trim();
+                userList.removeChild(li);
+                // localStorage.removeItem(email);
+                axios.get('https://crudcrud.com/api/2ff3eaea3d8846cfa7a0ec105ad9cb77/AppoitmentData')
+                    .then(res => {
+                        let users = res.data;
+                        users.forEach(element => {
+                            if (element.email === email) {
+                                let userId = element._id;
+                                axios.delete(`https://crudcrud.com/api/2ff3eaea3d8846cfa7a0ec105ad9cb77/AppoitmentData/${userId}`)
+                            }
+                        });
+                    })
+                    .catch(err => console.log(err))
+            }
+        }
+
+        userList.addEventListener('click', editItem);
+        function editItem(evnt) {
+            if (evnt.target.classList.contains('edit')) {
+                var li = event.target.parentElement;
+                var name = li.textContent.split(':')[0].trim();
+                var email = li.textContent.split(":")[1].split(',')[0].trim();
+                var phone = li.textContent.split(':')[2].trim();
+
+                var formInputs = document.querySelectorAll('#my_form input');
+
+                formInputs[0].value = name;
+                formInputs[1].value = email;
+                formInputs[2].value = phone;
+                userList.removeChild(li);
+                // localStorage.removeItem(email);
+                
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
